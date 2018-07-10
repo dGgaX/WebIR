@@ -20,7 +20,8 @@ public class Wizard extends javax.swing.JDialog {
     DefaultListModel<String> model;
     
     private Object [] [] commands;
-    
+    private long endTimeMillis = System.currentTimeMillis() + 1000;
+        
     boolean listeningForInput = true;
     
     int column;
@@ -49,6 +50,7 @@ public class Wizard extends javax.swing.JDialog {
             @Override
             public void inputDetected(PortEvent pvt) {
                 if (pvt.getID() == PortEvent.STRING && listeningForInput) {
+                    jLabel3.setText((String) commands[row][0]);
                     String input = (String) pvt.getSource();
                     model.add(0, input);
                     if (model.size() >= 5) {
@@ -72,7 +74,7 @@ public class Wizard extends javax.swing.JDialog {
                             if (row >= parent.getjTbl().getRowCount()) {
                                 closeWizard();
                             }
-                            waitThread.interrupt();
+                            endTimeMillis = System.currentTimeMillis() + 1000;
                         }
                     }
                 }
@@ -82,24 +84,25 @@ public class Wizard extends javax.swing.JDialog {
 
     
     private final Thread waitThread = new Thread() {
-        private long endTimeMillis = System.currentTimeMillis() + 1000;
+        boolean run = true;
         @Override
         public void run() {
-            while(true) {
+            while(run) {
                 try {
                     sleep(200);
                     if (System.currentTimeMillis() >= endTimeMillis) {
                         listeningForInput = true;
-                        jLabel3.setText((String) commands[row][0]);
                     }
                 } catch(InterruptedException e) {
-                    endTimeMillis = System.currentTimeMillis() + 2000;
+                    run = false;
                 }
             }
         }
     };
     
     public void closeWizard() {
+        waitThread.interrupt();
+        listeningForInput = false;
         this.setVisible(false);
         this.dispose();
     }
