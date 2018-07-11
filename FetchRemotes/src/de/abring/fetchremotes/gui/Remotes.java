@@ -6,8 +6,13 @@
 package de.abring.fetchremotes.gui;
 
 import de.abring.rxtx.SerialConnection;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,36 +23,7 @@ import org.json.JSONObject;
  */
 public class Remotes extends javax.swing.JInternalFrame {
 
-    private Object [] [] commands = new Object [][] {
-            {"Power"},
-            {"Source"},
-            {"P+"},
-            {"P-"},
-            {"V+"},
-            {"V-"},
-            {"Mute"},
-            {"Text"},
-            {"Red"},
-            {"Green"},
-            {"Yellow"},
-            {"Blue"},
-            {"1"},
-            {"2"},
-            {"3"},
-            {"4"},
-            {"5"},
-            {"6"},
-            {"7"},
-            {"8"},
-            {"9"},
-            {"0"}
-        };
-    private final DefaultTableModel model = new DefaultTableModel(
-        commands,
-        new String [] {
-            "Command"
-        }
-    );
+    private final DefaultTableModel model;
     private final FetchRemotes parent;
     private SerialConnection serialConnection;
     
@@ -58,11 +34,34 @@ public class Remotes extends javax.swing.JInternalFrame {
      */
     public Remotes(FetchRemotes parent, SerialConnection serialConnection) {
         initComponents();
+        model = new MyDefaultTableModel(parent.getKeys().toArray(), 0);
         this.jTbl.setModel(model);
+        
         this.jTbl.changeSelection(0, 1, false, false);
-        addRemote();
         this.parent = parent;
         this.serialConnection = serialConnection;
+    }
+    
+    public JSONObject getJSONObject() {
+        JSONObject all = new JSONObject();
+        
+        for (int r = 0; r < this.jTbl.getRowCount(); r++) {
+
+            JSONObject remote = new JSONObject();
+    
+            for (int c = 1; c < this.jTbl.getColumnCount(); c++) {
+                
+                JSONArray command = (JSONArray) this.jTbl.getValueAt(r, c);
+                
+                remote.put(this.jTbl.getColumnName(c), command);
+                
+            }
+            
+            all.put((String) this.jTbl.getValueAt(r, 0), remote);
+            
+        }
+        
+        return all;
     }
     
     public JSONArray getJSONArray() {
@@ -90,61 +89,84 @@ public class Remotes extends javax.swing.JInternalFrame {
     public void setTextAtSelection(JSONArray input) {
         int row = this.jTbl.getSelectedRow();
         int column = this.jTbl.getSelectedColumn();
-        if (column == 0) {
-            column++;
+        
+        if (row == 0) {
+            row++;
             this.jTbl.changeSelection(row, column, false, false);
         }
         this.jTbl.setValueAt(input, row, column);
-        row++;
-        if (row >= this.jTbl.getRowCount()) {
-            column++;
-            row = 0;
-        }
+        column++;
         if (column >= this.jTbl.getColumnCount()) {
-            column = 1;
+            row++;
+            column = 0;
+        }
+        if (row >= this.jTbl.getRowCount()) {
+            row = 1;
         }
         this.jTbl.changeSelection(row, column, false, false);
     }
 
-    public void setTextAtRow(JSONArray input, int row) {
+    public void setTextAtColumn(JSONArray input, int row) {
         int column = this.jTbl.getSelectedColumn();
-        if (column == 0) {
-            column++;
+        
+        if (row == 0) {
+            row++;
             this.jTbl.changeSelection(row, column, false, false);
         }
         this.jTbl.setValueAt(input, row, column);
-        row++;
-        if (row >= this.jTbl.getRowCount()) {
-            column++;
-            row = 0;
-        }
+        column++;
         if (column >= this.jTbl.getColumnCount()) {
-            column = 1;
+            row++;
+            column = 0;
+        }
+        if (row >= this.jTbl.getRowCount()) {
+            row = 1;
         }
         this.jTbl.changeSelection(row, column, false, false);
     }
 
     public final void addRemote() {
-        String response = JOptionPane.showInputDialog(null,
+        String response = JOptionPane.showInputDialog(this.getFRParent(),
             "What is the name of the Remote?",
             "Enter the name",
             JOptionPane.QUESTION_MESSAGE);
-        model.addColumn(response);
-        this.jTbl.changeSelection(0, this.jTbl.getColumnCount() - 1, false, false);
+        Object[] newRowObject = new Object[model.getColumnCount()];
+        if (newRowObject.length > 0 && response != null && !response.isEmpty())
+            newRowObject[0] = response;
+        model.addRow(newRowObject);
+        this.jTbl.changeSelection(this.jTbl.getRowCount() - 1, 1, false, false);
+    }
+    
+    public final void addThisRemote(String response, JSONObject remote) {
+        
+        Object[] newRowObject = new Object[model.getColumnCount()];
+        if (newRowObject.length > 0 && response != null && !response.isEmpty())
+            newRowObject[0] = response;
+        
+        for (int i = 1; i < this.jTbl.getColumnCount(); i++) {
+            String columnName = this.jTbl.getColumnName(i);
+            if (remote.has(columnName)) {
+                newRowObject[i] = remote.get(columnName);
+            }
+        }
+        
+        model.addRow(newRowObject);
+        this.jTbl.changeSelection(this.jTbl.getRowCount() - 1, 1, false, false);
     }
     
     public final void removeRemote() {
-        int index = this.jTbl.getSelectedColumn();
-        if (index == 0)
-            return;
-        this.jTbl.changeSelection(0, 0, false, false);
-        
-        TableColumnModel cm = this.jTbl.getColumnModel();
-        cm.removeColumn(cm.getColumn(index));
+        int index = this.jTbl.getSelectedRow();
+        this.jTbl.changeSelection(Math.max(0, index - 1), 0, false, false);
+        model.removeRow(index);
     }
     
     public final void wizard() {
-        Wizard wizard = new Wizard(this, true, this.commands, this.serialConnection);
+        List<String> columnNames = new ArrayList<>();
+        for (int i = 0; i < this.jTbl.getColumnCount(); i++) {
+            String columnName = this.jTbl.getColumnName(i);
+            columnNames.add(columnName);
+        }
+        Wizard wizard = new Wizard(this, true, columnNames.toArray(), this.serialConnection);
         wizard.setVisible(true);
     }
     
@@ -172,46 +194,15 @@ public class Remotes extends javax.swing.JInternalFrame {
 
         jTbl.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"Power"},
-                {"Source"},
-                {"P+"},
-                {"P-"},
-                {"V+"},
-                {"V-"},
-                {"Mute"},
-                {"Text"},
-                {"Red"},
-                {"Green"},
-                {"Yellow"},
-                {"Blue"},
-                {"1"},
-                {"2"},
-                {"3"},
-                {"4"},
-                {"5"},
-                {"6"},
-                {"7"},
-                {"8"},
-                {"9"},
-                {"0"}
+
             },
             new String [] {
-                "Command"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false
-            };
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
             }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+        ));
+        jTbl.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTblMouseClicked(evt);
             }
         });
         jSclPneTbl.setViewportView(jTbl);
@@ -266,12 +257,12 @@ public class Remotes extends javax.swing.JInternalFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPne, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jSclPneTbl, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 882, Short.MAX_VALUE)
+            .addComponent(jSclPneTbl, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 1041, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jSclPneTbl)
+                .addComponent(jSclPneTbl, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPne, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -290,6 +281,30 @@ public class Remotes extends javax.swing.JInternalFrame {
     private void jBtnWizardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnWizardActionPerformed
         wizard();
     }//GEN-LAST:event_jBtnWizardActionPerformed
+
+    private void jTblMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTblMouseClicked
+        if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 2) {
+            int row = this.jTbl.getSelectedRow();
+            int column = this.jTbl.getSelectedColumn();
+            if (column == 0) {
+                String response = JOptionPane.showInputDialog(this.getFRParent(),
+                "What is the name of the Remote?",
+                "Enter the name",
+                JOptionPane.QUESTION_MESSAGE);
+                if (response != null && !response.isEmpty())
+                    this.jTbl.setValueAt(response, row, column);
+            } else {
+                Object object = this.jTbl.getValueAt(row, column);
+                if (!(object instanceof JSONArray))
+                    object = new JSONArray("[0,0,0]");
+                Edit editor = new Edit(this.getFRParent(), true, (JSONArray) object);
+                editor.setVisible(true);
+                if (editor.getJSONArray() == null)
+                    return;
+                this.jTbl.setValueAt(editor.getJSONArray(), row, column);
+            }
+        }
+    }//GEN-LAST:event_jTblMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

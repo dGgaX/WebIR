@@ -11,13 +11,22 @@ import de.abring.rxtx.PortListener;
 import de.abring.rxtx.SerialConnection;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -28,16 +37,32 @@ public class FetchRemotes extends javax.swing.JFrame {
 
     private final SerialConnection serialConnection;
     DefaultListModel<String> model;
-    private File workingDir = new File(System.getProperty("user.home") + System.getProperty("file.separator"));
-    
+    private final Properties properties;
+
+    private String version;
+    private List<String> keys;
+    private File workingDir;
+
+
+
     /**
      * Creates new form FetchRemotes
      */
     public FetchRemotes() {
         initComponents();
+        this.version = "";
+        this.keys = new ArrayList<>();
+        this.workingDir = new File(System.getProperty("user.home") + System.getProperty("file.separator"));
+        
         this.serialConnection = new SerialConnection();
+        
+        this.properties = new Properties();
+        
         this.model = new DefaultListModel<>();
         this.jLstCommands.setModel(model);
+        
+        loadProperties();
+        
         this.portSelector.setSerialConnection(this.serialConnection);
         this.serialConnection.getPortListener().add(new PortListener()  {
             @Override
@@ -48,6 +73,22 @@ public class FetchRemotes extends javax.swing.JFrame {
                 }
             }
         });
+    }
+    
+    private void loadProperties() {
+        try {
+            properties.load(new FileInputStream("FetchRemotes.properties"));
+        } catch (IOException e) {
+            System.out.println("Could not open Config file");
+            System.exit(1);
+        }
+        this.version = this.properties.getProperty("version");
+        
+        this.keys.clear();
+        this.keys.add("Name");
+        this.keys.addAll(Arrays.asList(this.properties.getProperty("keys").split(",")));
+        
+        this.workingDir = new File(properties.getProperty("home_dir"));
     }
 
     /**
@@ -73,6 +114,8 @@ public class FetchRemotes extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Fetch Remotes");
 
+        jSplitPane.setDividerLocation(200);
+
         jDesktop.setBackground(new java.awt.Color(255, 255, 255));
         jDesktop.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
@@ -80,7 +123,7 @@ public class FetchRemotes extends javax.swing.JFrame {
         jDesktop.setLayout(jDesktopLayout);
         jDesktopLayout.setHorizontalGroup(
             jDesktopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 915, Short.MAX_VALUE)
+            .addGap(0, 1081, Short.MAX_VALUE)
         );
         jDesktopLayout.setVerticalGroup(
             jDesktopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -90,6 +133,11 @@ public class FetchRemotes extends javax.swing.JFrame {
         jSplitPane.setRightComponent(jDesktop);
 
         jBtnOpen.setText("open");
+        jBtnOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBtnOpenActionPerformed(evt);
+            }
+        });
 
         jBtnSave.setText("save");
         jBtnSave.addActionListener(new java.awt.event.ActionListener() {
@@ -142,10 +190,10 @@ public class FetchRemotes extends javax.swing.JFrame {
             .addGroup(jPneChildFrameLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPneChildFrameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(portSelector, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(portSelector, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
-            .addComponent(jSclPneLstCommands)
+            .addComponent(jSclPneLstCommands, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
         jPneChildFrameLayout.setVerticalGroup(
             jPneChildFrameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -164,7 +212,9 @@ public class FetchRemotes extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jSplitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 1289, Short.MAX_VALUE)
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -178,6 +228,7 @@ public class FetchRemotes extends javax.swing.JFrame {
     private void jBtnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnNewActionPerformed
         Remotes newRemote = new Remotes(this, this.serialConnection);
         this.jDesktop.add(newRemote);
+        newRemote.addRemote();
         newRemote.show();
     }//GEN-LAST:event_jBtnNewActionPerformed
 
@@ -199,6 +250,10 @@ public class FetchRemotes extends javax.swing.JFrame {
         workingDir = new File(workingDir.getAbsolutePath() + System.getProperty("file.separator") + "remotes.json");
         saveAsIRRemote(workingDir);
     }//GEN-LAST:event_jBtnSaveActionPerformed
+
+    private void jBtnOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnOpenActionPerformed
+        openIRRemote();
+    }//GEN-LAST:event_jBtnOpenActionPerformed
 
 //    public void saveIRRemote(boolean saveAs) {
 //        if (this.jPneParent.getSelectedFrame() == null)
@@ -224,7 +279,43 @@ public class FetchRemotes extends javax.swing.JFrame {
         saveToJSONFile(FileIO.saveJSONFile(this, filename, filename.getAbsolutePath()));
     }
     
-    
+    public void openIRRemote() {
+        File openJSONFile = FileIO.openJSONFile(this, workingDir.getAbsolutePath() + System.getProperty("file.separator") + "remotes.json");
+        if (openJSONFile != null && openJSONFile.exists()) {
+            workingDir = openJSONFile.getAbsoluteFile();
+            String JSONText = "";
+            try {
+                Scanner scanner = new Scanner( openJSONFile, "UTF-8" );
+                JSONText = scanner.useDelimiter("\\A").next();
+                scanner.close();
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(FetchRemotes.class.getName()).log(Level.SEVERE, null, ex);
+                JSONText = "";
+            }
+            if (JSONText.isEmpty())
+                return;
+            JSONObject remotesList;
+            try {
+                remotesList = new JSONObject(JSONText);
+            } catch (JSONException ex) {
+                Logger.getLogger(FetchRemotes.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
+            
+            Remotes newRemote = new Remotes(this, this.serialConnection);
+            
+            for(Iterator iterator = remotesList.keySet().iterator(); iterator.hasNext();) {
+                String key = (String) iterator.next();
+                Object value = remotesList.get(key);
+                if (value instanceof JSONObject)
+                    newRemote.addThisRemote(key, (JSONObject) value);
+            }
+            
+            this.jDesktop.add(newRemote);
+            newRemote.show();
+            
+        }
+    }
     
     private void saveToJSONFile(File filename) {
         if (this.jDesktop.getSelectedFrame() == null || !(this.jDesktop.getSelectedFrame() instanceof Remotes))
@@ -232,7 +323,7 @@ public class FetchRemotes extends javax.swing.JFrame {
         if (filename == null)
             return;
         Remotes remote = (Remotes)this.jDesktop.getSelectedFrame();
-        JSONArray all = remote.getJSONArray();
+        JSONObject all = remote.getJSONObject();
         System.out.println(all);
         FileWriter fileWriter = null;
         try {
@@ -296,4 +387,25 @@ public class FetchRemotes extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane;
     private de.abring.rxtx.gui.PortSelector portSelector;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * @return the version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * @return the keys
+     */
+    public List<String> getKeys() {
+        return keys;
+    }
+
+    /**
+     * @return the workingDir
+     */
+    public File getWorkingDir() {
+        return workingDir;
+    }
 }

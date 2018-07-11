@@ -15,11 +15,11 @@ import org.json.JSONArray;
  */
 public class Wizard extends javax.swing.JDialog {
 
-    private String [] codes;
+    private String[] codes;
     private final SerialConnection serialConnection;
     DefaultListModel<String> model;
     
-    private Object [] [] commands;
+    private Object[] commands;
     private long endTimeMillis = System.currentTimeMillis() + 1000;
         
     boolean listeningForInput = true;
@@ -34,23 +34,23 @@ public class Wizard extends javax.swing.JDialog {
      * @param commands
      * @param serialConnection
      */
-    public Wizard(Remotes parent, boolean modal, Object [] [] commands, SerialConnection serialConnection) {
+    public Wizard(Remotes parent, boolean modal, Object[] commands, SerialConnection serialConnection) {
         super(parent.getFRParent(), modal);
         initComponents();
         this.model = new DefaultListModel<>();
         this.jLstCommands.setModel(model);
         this.serialConnection = serialConnection;
         this.commands = commands;
-        column = parent.getjTbl().getSelectedColumn();
-        row = 0;
+        column = 1;
+        row = parent.getjTbl().getSelectedRow();
         parent.getjTbl().changeSelection(row, column, false, false);
-        this.jLabel3.setText((String) commands[row][0]);
+        this.jLabel3.setText((String) commands[column]);
         this.waitThread.start();
         this.serialConnection.getPortListener().add(new PortListener()  {
             @Override
             public void inputDetected(PortEvent pvt) {
                 if (pvt.getID() == PortEvent.STRING && listeningForInput) {
-                    jLabel3.setText((String) commands[row][0]);
+                    jLabel3.setText((String) commands[column]);
                     String input = (String) pvt.getSource();
                     model.add(0, input);
                     if (model.size() >= 5) {
@@ -67,11 +67,11 @@ public class Wizard extends javax.swing.JDialog {
                             commandArray.put(Long.parseLong(commandParts[0]));
                             commandArray.put(Long.parseLong(commandParts[1]));
                             commandArray.put(Long.parseLong(commandParts[2]));
-                            parent.setTextAtRow(commandArray, row);
+                            parent.setTextAtColumn(commandArray, column);
                             model.clear();
-                            row++;
+                            column++;
                             jLabel3.setText("STOP");
-                            if (row >= parent.getjTbl().getRowCount()) {
+                            if (column >= parent.getjTbl().getColumnCount()) {
                                 closeWizard();
                             }
                             endTimeMillis = System.currentTimeMillis() + 1000;
@@ -92,7 +92,7 @@ public class Wizard extends javax.swing.JDialog {
                     sleep(200);
                     if (System.currentTimeMillis() >= endTimeMillis) {
                         listeningForInput = true;
-                        jLabel3.setText((String) commands[row][0]);
+                        jLabel3.setText((String) commands[column]);
                     
                     }
                 } catch(InterruptedException e) {
