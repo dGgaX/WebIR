@@ -92,6 +92,8 @@ public class Wizard extends javax.swing.JDialog {
                     sleep(200);
                     if (System.currentTimeMillis() >= endTimeMillis) {
                         listeningForInput = true;
+                        jLabel3.setText((String) commands[row][0]);
+                    
                     }
                 } catch(InterruptedException e) {
                     run = false;
