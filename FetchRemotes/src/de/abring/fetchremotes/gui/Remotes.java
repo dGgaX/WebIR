@@ -156,6 +156,8 @@ public class Remotes extends javax.swing.JInternalFrame {
     
     public final void removeRemote() {
         int index = this.jTbl.getSelectedRow();
+        if (index < 0)
+            return;
         this.jTbl.changeSelection(Math.max(0, index - 1), 0, false, false);
         model.removeRow(index);
     }
