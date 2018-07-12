@@ -59,22 +59,28 @@ public class Wizard extends javax.swing.JDialog {
                             model.get(1).equals(model.get(2)) &&
                             model.get(2).equals(model.get(3)) &&
                             model.get(3).equals(model.get(4)) ) {
-                            
-                            listeningForInput = false;
-                            
-                            String[] commandParts = input.split(",");
-                            JSONArray commandArray = new JSONArray();
-                            commandArray.put(Long.parseLong(commandParts[0]));
-                            commandArray.put(Long.parseLong(commandParts[1]));
-                            commandArray.put(Long.parseLong(commandParts[2]));
-                            parent.setTextAtColumn(commandArray, column);
-                            model.clear();
-                            column++;
-                            jLabel3.setText("STOP");
-                            if (column >= parent.getjTbl().getColumnCount()) {
-                                closeWizard();
+                            if (input.startsWith(parent.getFRParent().getIncoming())) {
+                                input = input.substring(parent.getFRParent().getIncoming().length());
+                                input = input.trim();
+                                String[] commandParts = input.split(",");
+                                if (commandParts.length >= 3) {
+                                    
+                                    listeningForInput = false;
+                                    
+                                    JSONArray commandArray = new JSONArray();
+                                    commandArray.put(Long.parseLong(commandParts[0]));
+                                    commandArray.put(Long.parseLong(commandParts[1]));
+                                    commandArray.put(Long.parseLong(commandParts[2]));
+                                    parent.setTextAtColumn(commandArray, column);
+                                    model.clear();
+                                    column++;
+                                    jLabel3.setText("STOP");
+                                    if (column >= parent.getjTbl().getColumnCount()) {
+                                        closeWizard();
+                                    }
+                                    endTimeMillis = System.currentTimeMillis() + 1000;
+                                }
                             }
-                            endTimeMillis = System.currentTimeMillis() + 1000;
                         }
                     }
                 }

@@ -42,6 +42,8 @@ public class FetchRemotes extends javax.swing.JFrame {
     private String version;
     private List<String> keys;
     private File workingDir;
+    private String incoming;
+    private String outgoing;
 
 
 
@@ -53,6 +55,8 @@ public class FetchRemotes extends javax.swing.JFrame {
         this.version = "";
         this.keys = new ArrayList<>();
         this.workingDir = new File(System.getProperty("user.home") + System.getProperty("file.separator"));
+        this.incoming = "";
+        this.outgoing = "";
         
         this.serialConnection = new SerialConnection();
         
@@ -89,6 +93,11 @@ public class FetchRemotes extends javax.swing.JFrame {
         this.keys.addAll(Arrays.asList(this.properties.getProperty("keys").split(",")));
         
         this.workingDir = new File(properties.getProperty("home_dir"));
+        
+        this.incoming = this.properties.getProperty("incoming");
+        
+        this.outgoing = this.properties.getProperty("outgoing");
+        
     }
 
     /**
@@ -236,13 +245,20 @@ public class FetchRemotes extends javax.swing.JFrame {
         if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() == 2) {
             if (this.jDesktop.getSelectedFrame() == null || !(this.jDesktop.getSelectedFrame() instanceof Remotes))
                 return;
-            Remotes remote = (Remotes)this.jDesktop.getSelectedFrame();
-            String[] commandParts = this.jLstCommands.getSelectedValue().split(",");
-            JSONArray commandArray = new JSONArray();
-            commandArray.put(Long.parseLong(commandParts[0]));
-            commandArray.put(Long.parseLong(commandParts[1]));
-            commandArray.put(Long.parseLong(commandParts[2]));
-            remote.setTextAtSelection(commandArray);
+            String entry = this.jLstCommands.getSelectedValue();
+            if (entry.startsWith(this.incoming)) {
+                entry = entry.substring(this.incoming.length());
+                entry = entry.trim();
+                Remotes remote = (Remotes)this.jDesktop.getSelectedFrame();
+                String[] commandParts = entry.split(",");
+                if (commandParts.length >= 3) {
+                    JSONArray commandArray = new JSONArray();
+                    commandArray.put(Long.parseLong(commandParts[0]));
+                    commandArray.put(Long.parseLong(commandParts[1]));
+                    commandArray.put(Long.parseLong(commandParts[2]));
+                    remote.setTextAtSelection(commandArray);
+                }
+            }
         }
     }//GEN-LAST:event_jLstCommandsMouseClicked
 
@@ -407,5 +423,19 @@ public class FetchRemotes extends javax.swing.JFrame {
      */
     public File getWorkingDir() {
         return workingDir;
+    }
+
+    /**
+     * @return the incoming
+     */
+    public String getIncoming() {
+        return incoming;
+    }
+
+    /**
+     * @return the outgoing
+     */
+    public String getOutgoing() {
+        return outgoing;
     }
 }
