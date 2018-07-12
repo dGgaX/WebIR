@@ -6,14 +6,22 @@
 package de.abring.fetchremotes.gui;
 
 import de.abring.rxtx.SerialConnection;
+import java.awt.Rectangle;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DropMode;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.TransferHandler;
+import javax.swing.TransferHandler.TransferSupport;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -26,20 +34,71 @@ public class Remotes extends javax.swing.JInternalFrame {
     private final DefaultTableModel model;
     private final FetchRemotes parent;
     private SerialConnection serialConnection;
+    private final File filename;
     
     /**
      * Creates new form Remotes
      * @param parent
      * @param serialConnection
+     * @param filename
      */
-    public Remotes(FetchRemotes parent, SerialConnection serialConnection) {
+    public Remotes(FetchRemotes parent, SerialConnection serialConnection, File filename) {
         initComponents();
         model = new MyDefaultTableModel(parent.getKeys().toArray(), 0);
         this.jTbl.setModel(model);
+        this.jTbl.setDragEnabled(true);
+        this.jTbl.setDropMode(DropMode.INSERT_ROWS);
+        this.jTbl.setTransferHandler(new TransferHandler() {
+
+            public boolean canImport(TransferSupport support) {
+                if (!support.isDrop()) {
+                    return false;
+                }
+
+                if (!support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            public boolean importData(TransferSupport support) {
+        
+                if (!canImport(support)) {
+                    return false;
+                }
+
+                JTable.DropLocation dl = (JTable.DropLocation) support.getDropLocation();
+
+                int row = dl.getRow();
+
+        
+                String data;
+                try {
+                  data = (String) support.getTransferable().getTransferData(
+                      DataFlavor.stringFlavor);
+                } catch (UnsupportedFlavorException e) {
+                  return false;
+                } catch (IOException e) {
+                  return false;
+                }
+
+                String[] rowData = data.split(",");
+                model.insertRow(row, rowData);
+
+                Rectangle rect = jTbl.getCellRect(row, 0, false);
+                if (rect != null) {
+                  jTbl.scrollRectToVisible(rect);
+                }
+
+                return true;
+            }
+        }); 
         
         this.jTbl.changeSelection(0, 1, false, false);
         this.parent = parent;
         this.serialConnection = serialConnection;
+        this.filename = filename;
     }
     
     public JSONObject getJSONObject() {
@@ -90,8 +149,8 @@ public class Remotes extends javax.swing.JInternalFrame {
         int row = this.jTbl.getSelectedRow();
         int column = this.jTbl.getSelectedColumn();
         
-        if (row == 0) {
-            row++;
+        if (column == 0) {
+            column++;
             this.jTbl.changeSelection(row, column, false, false);
         }
         this.jTbl.setValueAt(input, row, column);
@@ -106,11 +165,11 @@ public class Remotes extends javax.swing.JInternalFrame {
         this.jTbl.changeSelection(row, column, false, false);
     }
 
-    public void setTextAtColumn(JSONArray input, int row) {
-        int column = this.jTbl.getSelectedColumn();
+    public void setTextAtColumn(JSONArray input, int column) {
+        int row = this.jTbl.getSelectedRow();
         
-        if (row == 0) {
-            row++;
+        if (column == 0) {
+            column++;
             this.jTbl.changeSelection(row, column, false, false);
         }
         this.jTbl.setValueAt(input, row, column);
@@ -344,5 +403,12 @@ public class Remotes extends javax.swing.JInternalFrame {
      */
     public javax.swing.JTable getjTbl() {
         return jTbl;
+    }
+
+    /**
+     * @return the filename
+     */
+    public File getFilename() {
+        return filename;
     }
 }

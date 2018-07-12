@@ -73,6 +73,8 @@ public class FetchRemotes extends javax.swing.JFrame {
             public void inputDetected(PortEvent pvt) {
                 if (pvt.getID() == PortEvent.STRING) {
                     String input = (String) pvt.getSource();
+                    if (model.size() > 0 && model.get(0).equals(input))
+                        return;
                     model.add(0, input);
                 }
             }
@@ -235,7 +237,7 @@ public class FetchRemotes extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jBtnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnNewActionPerformed
-        Remotes newRemote = new Remotes(this, this.serialConnection);
+        Remotes newRemote = new Remotes(this, this.serialConnection, this.workingDir);
         this.jDesktop.add(newRemote);
         newRemote.addRemote();
         newRemote.show();
@@ -263,7 +265,11 @@ public class FetchRemotes extends javax.swing.JFrame {
     }//GEN-LAST:event_jLstCommandsMouseClicked
 
     private void jBtnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnSaveActionPerformed
-        workingDir = new File(workingDir.getAbsolutePath() + System.getProperty("file.separator") + "remotes.json");
+        if (this.jDesktop.getSelectedFrame() == null || !(this.jDesktop.getSelectedFrame() instanceof Remotes))
+            return;
+        Remotes remote = (Remotes) this.jDesktop.getSelectedFrame();
+        
+        workingDir = new File(remote.getFilename().getAbsolutePath() + System.getProperty("file.separator") + "remotes.json");
         saveAsIRRemote(workingDir);
     }//GEN-LAST:event_jBtnSaveActionPerformed
 
@@ -318,7 +324,7 @@ public class FetchRemotes extends javax.swing.JFrame {
                 return;
             }
             
-            Remotes newRemote = new Remotes(this, this.serialConnection);
+            Remotes newRemote = new Remotes(this, this.serialConnection, this.workingDir);
             
             for(Iterator iterator = remotesList.keySet().iterator(); iterator.hasNext();) {
                 String key = (String) iterator.next();

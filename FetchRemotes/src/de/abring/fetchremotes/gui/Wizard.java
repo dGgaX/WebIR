@@ -24,6 +24,8 @@ public class Wizard extends javax.swing.JDialog {
         
     boolean listeningForInput = true;
     
+    private final Remotes parent;
+    
     int column;
     int row;
     
@@ -37,6 +39,7 @@ public class Wizard extends javax.swing.JDialog {
     public Wizard(Remotes parent, boolean modal, Object[] commands, SerialConnection serialConnection) {
         super(parent.getFRParent(), modal);
         initComponents();
+        this.parent = parent;
         this.model = new DefaultListModel<>();
         this.jLstCommands.setModel(model);
         this.serialConnection = serialConnection;
@@ -49,43 +52,46 @@ public class Wizard extends javax.swing.JDialog {
         this.serialConnection.getPortListener().add(new PortListener()  {
             @Override
             public void inputDetected(PortEvent pvt) {
-                if (pvt.getID() == PortEvent.STRING && listeningForInput) {
-                    jLabel3.setText((String) commands[column]);
-                    String input = (String) pvt.getSource();
-                    model.add(0, input);
-                    if (model.size() >= 5) {
-                        System.out.println("Model is bigger than 5!");
-                        if (model.get(0).equals(model.get(1)) &&
-                            model.get(1).equals(model.get(2)) &&
-                            model.get(2).equals(model.get(3)) &&
-                            model.get(3).equals(model.get(4)) ) {
-                            if (input.startsWith(parent.getFRParent().getIncoming())) {
-                                input = input.substring(parent.getFRParent().getIncoming().length());
-                                input = input.trim();
-                                String[] commandParts = input.split(",");
-                                if (commandParts.length >= 3) {
-                                    
-                                    listeningForInput = false;
-                                    
-                                    JSONArray commandArray = new JSONArray();
-                                    commandArray.put(Long.parseLong(commandParts[0]));
-                                    commandArray.put(Long.parseLong(commandParts[1]));
-                                    commandArray.put(Long.parseLong(commandParts[2]));
-                                    parent.setTextAtColumn(commandArray, column);
-                                    model.clear();
-                                    column++;
-                                    jLabel3.setText("STOP");
-                                    if (column >= parent.getjTbl().getColumnCount()) {
-                                        closeWizard();
-                                    }
-                                    endTimeMillis = System.currentTimeMillis() + 1000;
-                                }
+                doInput(pvt);
+            }
+        });
+    }
+    
+    private void doInput(PortEvent pvt) {
+        if (pvt.getID() == PortEvent.STRING && listeningForInput) {
+            jLabel3.setText((String) commands[column]);
+            String input = (String) pvt.getSource();
+            model.add(0, input);
+            if (model.size() >= 5) {
+                if (model.get(0).equals(model.get(1)) &&
+                    model.get(1).equals(model.get(2)) &&
+                    model.get(2).equals(model.get(3)) &&
+                    model.get(3).equals(model.get(4)) ) {
+                    if (input.startsWith(parent.getFRParent().getIncoming())) {
+                        input = input.substring(parent.getFRParent().getIncoming().length());
+                        input = input.trim();
+                        String[] commandParts = input.split(",");
+                        if (commandParts.length >= 3) {
+
+                            listeningForInput = false;
+                            jLabel3.setText("STOP");
+                            endTimeMillis = System.currentTimeMillis() + 1000;
+
+                            JSONArray commandArray = new JSONArray();
+                            commandArray.put(Long.parseLong(commandParts[0]));
+                            commandArray.put(Long.parseLong(commandParts[1]));
+                            commandArray.put(Long.parseLong(commandParts[2]));
+                            parent.setTextAtColumn(commandArray, column);
+                            model.clear();
+                            column++;
+                            if (column >= parent.getjTbl().getColumnCount()) {
+                                closeWizard();
                             }
                         }
                     }
                 }
             }
-        });
+        }
     }
 
     

@@ -5,6 +5,7 @@
  */
 package de.abring.fetchremotes.gui;
 
+import de.abring.fetchremotes.gui.dialogues.MSG;
 import java.awt.event.KeyEvent;
 import org.json.JSONArray;
 
@@ -15,7 +16,7 @@ import org.json.JSONArray;
 public class Edit extends javax.swing.JDialog {
 
     private JSONArray array;
-             
+    
     /**
      * Creates new form Edit
      * @param parent
@@ -186,9 +187,17 @@ public class Edit extends javax.swing.JDialog {
     }//GEN-LAST:event_jBtnCancelActionPerformed
 
     private void jBtnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnOkActionPerformed
-        this.array.put(0, Long.parseLong(this.jTxtValue.getText()));
-        this.array.put(1, Long.parseLong(this.jTxtBits.getText()));
-        this.array.put(2, Long.parseLong(this.jTxtType.getText()));
+        try {
+            this.array.put(0, Long.parseLong(this.jTxtValue.getText()));
+            this.array.put(1, Long.parseLong(this.jTxtBits.getText()));
+            this.array.put(2, Long.parseLong(this.jTxtType.getText()));
+        } catch(NumberFormatException ex) {
+            this.array = null;
+            if (!MSG.dataChangeException(this.getParent())) {
+                this.array = new JSONArray("[0,0,0]");
+                return;
+            }
+        }
         this.dispose();
     }//GEN-LAST:event_jBtnOkActionPerformed
 

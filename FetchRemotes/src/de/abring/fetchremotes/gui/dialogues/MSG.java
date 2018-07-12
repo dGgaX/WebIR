@@ -39,6 +39,15 @@ public class MSG {
     }
     
     /**
+     * dataChangeException
+     * @param frame 
+     * @return  
+     */
+    public static final boolean dataChangeException(Component frame) {
+        return (JOptionPane.showConfirmDialog(frame, "Die Daten konnten nicht gespeichert werden. Fortfahren?", "Achtung!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION);
+    }
+    
+    /**
      * msgSaveChanges
      * @param frame
      * @return 
