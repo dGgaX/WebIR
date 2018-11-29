@@ -1,0 +1,35 @@
+Partlist
+
+Exported from Schaltplan_SMD2.brd at 29.11.2018 20:29
+
+EAGLE Version 8.2.2 Copyright (c) 1988-2017 Autodesk, Inc.
+
+Assembly variant: 
+
+Part           Value                     Package           Library                                                         Position (mm)         Orientation
+
+3.3V           TPB2,54                   B2,54             testpad                                                         (3.175 13.716)        R270
+5V             TPB2,54                   B2,54             testpad                                                         (3.175 2.286)         R90
+C1             100 nF (RND 150SH31B1041) C1206             rcl                                                             (16.887 4.904)        R270
+C2             1 µF (SMD ELKO 1,0/50)    UD-4X5,8_NICHICON rcl                                                             (16.891 10.541)       R90
+GND            TPB2,54                   B2,54             testpad                                                         (3.175 8.001)         R90
+IC1            ESP12                     ESP12E-SMD        esp8266modules                                                  (38.735 15.621)       R180
+IC2            TC1262-3.3VDB PMIC        SOT223            linear-technology                                               (9.525 8.001)         R90
+IR-TRANSMITTER TSOP1833                  TSOP18XX          tsop                                                            (24.765 8.636)        R0
+IR_REC         TPB2,54                   B2,54             testpad                                                         (3.175 19.431)        R0
+IR_SEND        TPB2,54                   B2,54             testpad                                                         (3.175 25.146)        R0
+K1             Micro-USB                 629105150521      Wurth_Elektronik_Electromechanic_Input-Output_Connectors_rev15c (24.765 1.27)         R0
+LED1           IR 12-21C EVL             CHIPLED_1206      led                                                             (6.985 6.096)         MR180
+LED2           IR 12-21C EVL             CHIPLED_1206      led                                                             (42.545 6.096)        MR180
+LED3           IR 12-21C EVL             CHIPLED_1206      led                                                             (42.545 21.336)       MR0
+LED4           IR 12-21C EVL             CHIPLED_1206      led                                                             (6.985 21.336)        MR0
+R1             18                        R1206W            resistor                                                        (11.43 8.001)         MR180
+R2             18                        R1206W            resistor                                                        (38.1 8.001)          MR0
+R3             18                        R1206W            resistor                                                        (38.1 19.431)         MR0
+R4             18                        R1206W            resistor                                                        (11.43 19.431)        MR180
+R5             1K                        R1206W            resistor                                                        (19.05 16.891)        R270
+R6             10                        R1206W            resistor                                                        (11.43 13.716)        R180
+RX             TPB2,54                   B2,54             testpad                                                         (8.89 25.146)         R270
+T1             BC818-25                  SOT23-BEC         transistor-npn                                                  (14.605 16.891)       R90
+T2             BC808-25                  SOT23-BEC         transistor-pnp                                                  (8.255 16.891)        R90
+TX             TPB2,54                   B2,54             testpad                                                         (14.605 25.146)       R270

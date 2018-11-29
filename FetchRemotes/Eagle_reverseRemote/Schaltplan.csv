@@ -1,0 +1,14 @@
+"Part";"Value";"Device";"Package";"Description";"";
+"C1";"100 nF";"C-EUC0805K";"C0805K";"CAPACITOR, European symbol";"";
+"C2";"2,2 µF";"CPOL-EUE2.5-5";"E2,5-5";"POLARIZED CAPACITOR, European symbol";"";
+"C3";"10 µF";"CPOL-EUE2.5-5";"E2,5-5";"POLARIZED CAPACITOR, European symbol";"";
+"IC1";"LF 33 CDT";"MC78M05ABDT";"DPACK_3";"500 mA Positive Voltage Regulators";"";
+"IR-TRANSMITTER";"TSOP1833";"TSOP1833";"TSOP18XX";"IR Receiver and Demodulator";"";
+"LED1";"IR-LED";"LED5MM";"LED5MM";"LED";"";
+"R1";"10";"R-EU_M0805";"M0805";"RESISTOR, European symbol";"";
+"R2";"18";"R-EU_M0805";"M0805";"RESISTOR, European symbol";"";
+"R3";"1K";"R-EU_M0805";"M0805";"RESISTOR, European symbol";"";
+"T1";"BC847CSMD";"BC847CSMD";"SOT23";"NPN Transistor";"";
+"T2";"BC857CSMD";"BC857CSMD";"SOT23-BEC";"PNP Transistror";"";
+"U$1";"ESP01";"ESP01";"ESP01";"ESP8266 Wifi module 01";"";
+"U1";"USB-Con";"USB""";"USB-MICRO-SMD";"This is a USB AB connector that is compatible with USB OTG. i.e. this connector can serve as a host or device";"";
